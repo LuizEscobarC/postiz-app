@@ -1,4 +1,5 @@
 import { NewsletterInterface } from '@gitroom/nestjs-libraries/newsletter/newsletter.interface';
+import { brandName } from '@gitroom/helpers/utils/brand';
 
 export class ListmonkProvider implements NewsletterInterface {
   name = 'listmonk';
@@ -32,7 +33,7 @@ export class ListmonkProvider implements NewsletterInterface {
       const welcomeEmail = {
         subscriber_id: id,
         template_id: +process.env.LISTMONK_WELCOME_TEMPLATE_ID,
-        subject: 'Welcome to Postiz 🚀',
+        subject: `Welcome to ${brandName()} 🚀`,
       };
 
       await fetch(`${process.env.LISTMONK_DOMAIN}/api/tx`, {

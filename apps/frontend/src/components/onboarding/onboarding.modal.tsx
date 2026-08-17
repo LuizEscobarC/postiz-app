@@ -9,6 +9,7 @@ import SafeImage from '@gitroom/react/helpers/safe.image';
 import { AddProviderComponent } from '@gitroom/frontend/components/launches/add.provider.component';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
+import { useVariables } from '@gitroom/react/helpers/variable.context';
 
 interface OnboardingModalProps {
   onClose: () => void;
@@ -244,6 +245,7 @@ const OnboardingStep2: FC<{ onBack: () => void; onFinish: () => void }> = ({
   onBack,
   onFinish,
 }) => {
+  const { brandName } = useVariables();
   const t = useT();
 
   return (
@@ -266,7 +268,7 @@ const OnboardingStep2: FC<{ onBack: () => void; onFinish: () => void }> = ({
           <iframe
             className="h-full aspect-video"
             src="https://www.youtube.com/embed/BdsCVvEYgHU?si=vvhaZJ8I5oXXvVJS?autoplay=1"
-            title="Postiz Tutorial"
+            title={`${brandName} Tutorial`}
             allow="autoplay"
             allowFullScreen
           />

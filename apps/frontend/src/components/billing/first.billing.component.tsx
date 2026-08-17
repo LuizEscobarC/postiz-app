@@ -47,7 +47,7 @@ const EmbeddedBilling = dynamic(
 );
 
 export const FirstBillingComponent = () => {
-  const { stripeClient } = useVariables();
+  const { stripeClient, brandName } = useVariables();
   const user = useUser();
   const dub = useDubClickId();
   const [stripe, setStripe] = useState<null | Promise<Stripe>>(null);
@@ -81,12 +81,12 @@ export const FirstBillingComponent = () => {
 
   const showYouTube = () => {
     modals.openModal({
-      title: 'Grow Fast With Postiz (Play the video)',
+      title: `Grow Fast With ${brandName} (Play the video)`,
       children: (
         <iframe
           className="h-full aspect-video min-w-[800px]"
           src="https://www.youtube.com/embed/BdsCVvEYgHU?si=vvhaZJ8I5oXXvVJS?autoplay=1"
-          title="Postiz Tutorial"
+          title={`${brandName} Tutorial`}
           allow="autoplay"
           allowFullScreen
         />
@@ -122,7 +122,7 @@ export const FirstBillingComponent = () => {
           {t('billing_who_use', 'who use')}{' '}
           {t(
             'billing_postiz_grow_social',
-            'Postiz To Grow Their Social Presence'
+            `${brandName} To Grow Their Social Presence`
           )}
         </div>
 
@@ -137,7 +137,7 @@ export const FirstBillingComponent = () => {
                 alt="YouTube"
               />
             </div>
-            <div>See the power of Postiz (click here)</div>
+            <div>See the power of {brandName} (click here)</div>
           </div>
         </div>
 

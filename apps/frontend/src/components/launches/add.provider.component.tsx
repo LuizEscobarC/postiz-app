@@ -314,6 +314,7 @@ const ChromeExtensionWarning: FC<{
   onCancel: () => void;
 }> = ({ onConfirm, onCancel }) => {
   const modals = useModals();
+  const { brandName } = useVariables();
   const t = useT();
   return (
     <div className="flex flex-col gap-[16px] pt-[8px]">
@@ -346,8 +347,8 @@ const ChromeExtensionWarning: FC<{
           We will store your cookies securely to facilitate the connection.
         </li>
         <li>
-          Postiz does not take responsibility for any issues arising or account
-          termination due to the use of this method.
+          {brandName} does not take responsibility for any issues arising or
+          account termination due to the use of this method.
         </li>
       </ul>
       <div className="flex gap-[10px] mt-[8px]">

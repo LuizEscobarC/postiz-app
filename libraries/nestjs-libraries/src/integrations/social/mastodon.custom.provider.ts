@@ -7,6 +7,7 @@ import { MastodonProvider } from '@gitroom/nestjs-libraries/integrations/social/
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { Integration } from '@prisma/client';
+import { brandName } from '@gitroom/helpers/utils/brand';
 
 export class MastodonCustomProvider extends MastodonProvider {
   override identifier = 'mastodon-custom';
@@ -16,7 +17,7 @@ export class MastodonCustomProvider extends MastodonProvider {
 
   async externalUrl(url: string) {
     const form = new FormData();
-    form.append('client_name', 'Postiz');
+    form.append('client_name', brandName());
     form.append(
       'redirect_uris',
       `${process.env.FRONTEND_URL}/integrations/social/mastodon`

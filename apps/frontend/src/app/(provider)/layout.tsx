@@ -9,6 +9,7 @@ import { ReactNode } from 'react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import clsx from 'clsx';
 import { VariableContextComponent } from '@gitroom/react/helpers/variable.context';
+import { brandName } from '@gitroom/helpers/utils/brand';
 import UtmSaver from '@gitroom/helpers/utils/utm.saver';
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -39,6 +40,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           discordUrl={process.env.NEXT_PUBLIC_DISCORD_SUPPORT!}
           frontEndUrl={process.env.FRONTEND_URL!}
           isGeneral={!!process.env.IS_GENERAL}
+          brandName={brandName()}
           genericOauth={!!process.env.POSTIZ_GENERIC_OAUTH}
           oauthLogoUrl={process.env.NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL!}
           oauthDisplayName={process.env.NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME!}

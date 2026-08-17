@@ -3,13 +3,16 @@ import { useSearchParams } from 'next/navigation';
 import { ModalWrapperComponent } from '@gitroom/frontend/components/new-launch/modal.wrapper.component';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { Button } from '@gitroom/react/form/button';
+import { useVariables } from '@gitroom/react/helpers/variable.context';
 
 export const PreConditionComponentModal: FC = () => {
   const modal = useModals();
+  const { brandName } = useVariables();
   return (
     <div className="flex flex-col gap-[16px]">
       <div className="whitespace-pre-line">
-        This social channel was connected previously to another Postiz account.
+        This social channel was connected previously to another {brandName}{' '}
+        account.
         {'\n'}
         To continue, please fast-track your trial for an immediate charge.{'\n'}
         {'\n'}
