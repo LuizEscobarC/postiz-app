@@ -2,7 +2,11 @@
 name: Build
 
 on:
+  # [lampagos fork] limited to the long-lived branch so tag pushes don't run a
+  # second full build alongside Build Containers.
   push:
+    branches:
+      - lampagos
   merge_group:
   pull_request:
 

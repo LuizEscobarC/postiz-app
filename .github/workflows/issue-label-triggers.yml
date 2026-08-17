@@ -7,7 +7,8 @@ on:
 
 jobs:
   closed-public-website:
-    if: github.event.label.name == 'trigger-public-website'
+    # [lampagos fork] upstream-only triage automation
+    if: github.repository == 'gitroomhq/postiz-app' && github.event.label.name == 'trigger-public-website'
     runs-on: ubuntu-latest
     permissions:
       issues: write

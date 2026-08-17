@@ -7,6 +7,15 @@ on:
     tags:
       - '*'
 
+# [lampagos fork] single source of truth for the image name (ghcr requires a
+# lowercase owner). Change only this line to retarget the registry.
+env:
+  IMAGE: ghcr.io/luizescobarc/postiz-app
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-containers-common:
     runs-on: ubuntu-latest
@@ -25,8 +34,11 @@ jobs:
         include:
           - runnertags: ubuntu-latest
             arch: amd64
-          - runnertags: ubuntu-24.04-arm
-            arch: arm64
+          # [lampagos fork] arm64 disabled: production is x86_64 (Hetzner).
+          # Re-enable by uncommenting these two lines AND flipping ARM64 in the
+          # manifest job below.
+          # - runnertags: ubuntu-24.04-arm
+          #   arch: arm64
     runs-on: ${{ matrix.runnertags }}
     steps:
       - name: Checkout
@@ -51,12 +63,12 @@ jobs:
         run: |
           docker buildx build --platform linux/${{ matrix.arch }} \
             -f Dockerfile.dev \
-            -t ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-${{ matrix.arch }} \
+            -t "$IMAGE:${{ env.CONTAINERVER }}-${{ matrix.arch }}" \
             --build-arg NEXT_PUBLIC_VERSION=${{ env.NEXT_PUBLIC_VERSION }} \
             --pull \
             --no-cache \
             --provenance=false --sbom=false \
-            --output "type=registry,name=ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-${{ matrix.arch }}" .
+            --output "type=registry,name=$IMAGE:${{ env.CONTAINERVER }}-${{ matrix.arch }}" .
 
   build-container-manifest:
     needs: [build-containers, build-containers-common]
@@ -72,32 +84,27 @@ jobs:
       - name: Create Docker Manifest
         env:
           CONTAINERVER: ${{ needs.build-containers-common.outputs.containerver }}
+          # [lampagos fork] set to "true" when the arm64 matrix entry is enabled
+          ARM64: "false"
         run: |
-          # Verify the architecture images
-          echo "Verifying AMD64 image:"
-          docker buildx imagetools inspect ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-amd64
-          
-          echo "Verifying ARM64 image:"
-          docker buildx imagetools inspect ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-arm64
-          
-          # Try to remove any existing manifests first
-          docker manifest rm ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }} || true
-          docker manifest rm ghcr.io/gitroomhq/postiz-app:latest || true
-          
-          # Create and push the version-specific manifest
-          docker manifest create ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }} \
-            --amend ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-amd64 \
-            --amend ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-arm64
+          AMEND="--amend $IMAGE:$CONTAINERVER-amd64"
+          docker buildx imagetools inspect "$IMAGE:$CONTAINERVER-amd64"
+          if [ "$ARM64" = "true" ]; then
+            docker buildx imagetools inspect "$IMAGE:$CONTAINERVER-arm64"
+            AMEND="$AMEND --amend $IMAGE:$CONTAINERVER-arm64"
+          fi
 
-          docker manifest push ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}
+          # Try to remove any existing manifest first
+          docker manifest rm "$IMAGE:$CONTAINERVER" || true
 
-          # Create and push the latest manifest
-          docker manifest create ghcr.io/gitroomhq/postiz-app:latest \
-            --amend ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-amd64 \
-            --amend ghcr.io/gitroomhq/postiz-app:${{ env.CONTAINERVER }}-arm64
-
-          docker manifest push ghcr.io/gitroomhq/postiz-app:latest
+          # Create and push the version-specific manifest.
+          # No :latest tag on this fork: deploys pin by digest and a floating
+          # tag would only invite confusion with upstream's image.
+          docker manifest create "$IMAGE:$CONTAINERVER" $AMEND
+          docker manifest push "$IMAGE:$CONTAINERVER"
 
       - name: Verify Manifest
+        env:
+          CONTAINERVER: ${{ needs.build-containers-common.outputs.containerver }}
         run: |
-          docker manifest inspect ghcr.io/gitroomhq/postiz-app:latest
+          docker manifest inspect "$IMAGE:$CONTAINERVER"

@@ -5,6 +5,8 @@ on:
 
 jobs:
   submit:
+    # [lampagos fork] needs NEXTCLOUD_* secrets we do not have
+    if: github.repository == 'gitroomhq/postiz-app'
     runs-on: ubuntu-latest
 
     steps:
