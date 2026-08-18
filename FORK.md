@@ -50,21 +50,46 @@ Dois lugares ficaram de fora de propósito:
   qualquer escopo de componente. O caminho barato é remover o uso em
   `auth/layout.tsx` (diff de uma linha) em vez de reescrever os textos.
 
-## O que ainda depende de decisão de design
+## Marca LIGHTNING — logo e cores
 
-Nada disso foi mexido — precisa da logo e das cores reais:
+Aplicada em `v2.23.0-lampagos.2`. Fonte dos tokens:
+`ai-first/ai-first-design-system/tokens/colors.css`.
 
-1. **Logos.** São SVG inline, não arquivos:
-   `apps/frontend/src/components/new-layout/logo.tsx` (símbolo) e
-   `apps/frontend/src/components/ui/logo-text.component.tsx` (marca escrita).
-   Os arquivos `public/logo.svg`, `logo-text.svg` e `favicon.png` são **mortos** —
-   zero referências no código. Os que valem são `public/favicon.ico` e
-   `public/postiz.svg`.
-2. **Cor da marca.** `apps/frontend/src/app/colors.scss`, `--new-btn-primary:
-   #612bd3`. O `tailwind.config.cjs` não tem cor literal nenhuma, só aliases
-   `var(--…)`.
-   **Armadilha:** `#612BD3` está hardcoded em ~24 arquivos fora do `colors.scss`.
-   Editar os 24 é suicídio de rebase — prefira sobrescrever por CSS.
+**Logos viraram assets.** Eram SVG inline com `#612BD3` chumbado dentro de
+`new-layout/logo.tsx` e `ui/logo-text.component.tsx`. Agora apontam para
+`public/brand/icon-*.png`, gerados do `lampagos_icon_1024.png`. O wordmark, que
+desenhava a palavra "Postiz" em vetor, virou ícone + `BRAND_NAME` como texto —
+um wordmark chumbado sairia de sincronia assim que o nome mudasse.
+
+Os arquivos `public/logo.svg`, `logo-text.svg` e `favicon.png` continuam
+**mortos** (zero referências) — ignorados de propósito, mexer neles é ruído.
+
+**A armadilha do amarelo.** Os tokens vêm em OKLCH; foram convertidos para hex
+porque o Tailwind daqui usa modificadores de opacidade (`bg-btnPrimary/50`), que
+quebram com `oklch()` cru.
+
+O que quase quebrou o painel: **branco sobre `brand-500` (#F2C700) dá 1.62:1** e
+a WCAG AA pede 4.5:1. O roxo que saiu dava 7.51:1 com branco — por isso o
+upstream usa `text-white` em todo botão primário. Trocar só o fundo deixaria
+todo botão ilegível.
+
+Por isso `--new-btn-primary` (#F2C700) anda junto de `--new-btn-primary-text`
+(#171409, a *strike-ink*: 11.35:1). **Regra: nunca introduza um fundo amarelo sem
+pareá-lo com a tinta escura.** Um dos 5 sites só apareceu grepando a variável em
+vez da classe: `global.scss:811`, com `color: #fff !important`.
+
+`--new-ai-btn` fica rosa de propósito — a regra da marca é que amarelo cheio é
+escasso.
+
+**Roxo que sobrou de propósito** (roxo sobrando é bug cosmético; texto ilegível é
+produto quebrado):
+
+- `--color-forth` (#612ad5): 16 usos de `bg-forth` sem token de texto pareado.
+- ~64 `#612BD3` chumbados em 21 arquivos. Metade é borda/glow sem texto em cima
+  (trocáveis com segurança); metade é botão que precisa do mesmo par fundo+tinta.
+  Editar os 21 é churn hostil a rebase — é passo deliberado, não faxina.
+- `--color-custom1..55`: nomes opacos, e em pelo menos um caso o valor atual tem
+  contraste melhor que o token da marca.
 
 ## Como atualizar com os fixes do upstream
 
