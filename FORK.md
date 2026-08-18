@@ -111,6 +111,36 @@ O `build-containers.yml` também vai conflitar, porque foi modificado. Por isso 
 nome da imagem foi hoisted para um único `env: IMAGE` no topo — na maioria dos
 rebases é a única linha a reconciliar.
 
+## Credenciais de redes sociais não são problema do fork — são do overlay
+
+Registrado aqui porque o sintoma aponta para a aplicação e leva a investigar o
+lugar errado (foi o que aconteceu com o TikTok).
+
+O `docker-compose.yaml` do upstream declara as credenciais de **todas** as redes
+com valor fixo vazio (`TIKTOK_CLIENT_ID: ''` etc.). Se o overlay de produção não
+redeclarar a variável, esse `''` vence e o `.env` é ignorado em silêncio — sem
+erro no boot, porque `${VAR:-}` degrada para vazio de propósito. O erro só
+aparece na tela de OAuth da rede: `client_key` no TikTok, `client_id=` vazio no
+LinkedIn.
+
+Nada disso passa pelo código do fork. Antes de suspeitar da nossa imagem:
+
+```bash
+docker compose ... exec -T postiz printenv TIKTOK_CLIENT_ID < /dev/null
+```
+
+Vazio → é o overlay (`deploy/postiz/docker-compose.prod.yaml` no repo
+`um_programador_melhor`), não o fork. O `< /dev/null` importa: sem ele o
+`exec -T` consome o resto do script pela stdin e os comandos seguintes somem
+sem erro.
+
+Os nomes das variáveis vêm do provider da rede dentro da imagem:
+
+```bash
+grep -oE '[A-Z]+_CLIENT_[A-Z]+' \
+  apps/backend/src/../../libraries/nestjs-libraries/src/integrations/social/<rede>.provider.js
+```
+
 ## Mudanças no CI deste fork
 
 | arquivo | o que mudou |
