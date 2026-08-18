@@ -31,14 +31,18 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
   oneTimeToken = true;
 
   isBetweenSteps = false;
+  // Somente o que os produtos "Sign In with LinkedIn using OpenID Connect" e
+  // "Share on LinkedIn" concedem. Os escopos de organizacao e o r_basicprofile
+  // dependem da Community Management API, que exige aprovacao da LinkedIn; pedir
+  // um escopo nao concedido faz a LinkedIn recusar a autorizacao INTEIRA, com a
+  // pagina generica "Bummer, something went wrong" — inclusive para perfil
+  // pessoal. Restaurar as 4 linhas abaixo assim que a API for aprovada:
+  //   'r_basicprofile', 'rw_organization_admin',
+  //   'w_organization_social', 'r_organization_social',
   scopes = [
     'openid',
     'profile',
     'w_member_social',
-    'r_basicprofile',
-    'rw_organization_admin',
-    'w_organization_social',
-    'r_organization_social',
   ];
   override maxConcurrentJob = 2;
   refreshWait = true;
@@ -115,14 +119,6 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       })
     ).json();
 
-    const { vanityName } = await (
-      await fetch('https://api.linkedin.com/v2/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-    ).json();
-
     const {
       name,
       sub: id,
@@ -142,8 +138,32 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       expiresIn: expires_in,
       name,
       picture: picture || '',
-      username: vanityName,
+      username: await this.vanityNameOr(accessToken, id),
     };
+  }
+
+  // `/v2/me` exige r_basicprofile. Sem o escopo ele devolve 403, e o vanityName
+  // e' apenas cosmetico (vira o `username` do canal) — degradar para o id do
+  // OIDC evita derrubar a conexao inteira por causa disso. Quando a Community
+  // Management API for aprovada e os escopos voltarem, este metodo passa a
+  // preencher sozinho, sem mudanca de codigo.
+  private async vanityNameOr(accessToken: string, fallback: string) {
+    try {
+      const response = await fetch('https://api.linkedin.com/v2/me', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        return fallback;
+      }
+
+      const { vanityName } = await response.json();
+      return vanityName || fallback;
+    } catch (err) {
+      return fallback;
+    }
   }
 
   async generateAuthUrl() {
@@ -207,14 +227,6 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       })
     ).json();
 
-    const { vanityName } = await (
-      await fetch('https://api.linkedin.com/v2/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-    ).json();
-
     return {
       id,
       accessToken,
@@ -222,7 +234,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       expiresIn,
       name,
       picture,
-      username: vanityName,
+      username: await this.vanityNameOr(accessToken, id),
     };
   }
 
