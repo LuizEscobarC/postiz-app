@@ -11,7 +11,7 @@ export const LogoTextComponent = () => {
   return (
     <div className="flex items-center gap-[10px]">
       <img
-        src="/brand/icon-64.png"
+        src="/brand-icon-64.png"
         alt=""
         width={33}
         height={33}

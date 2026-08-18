@@ -5,7 +5,7 @@
 export const Logo = () => {
   return (
     <img
-      src="/brand/icon-128.png"
+      src="/brand-icon-128.png"
       alt=""
       width={60}
       height={60}
